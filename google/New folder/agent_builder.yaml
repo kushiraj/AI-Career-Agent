@@ -1,0 +1,51 @@
+# Google Cloud Agent Builder template (simplified)
+# Replace placeholders with your project, location, model and MCP config.
+
+agent:
+  id: ai-career-agent
+  displayName: AI Career Agent
+  description: Agent that analyzes resumes, matches JDs, generates referrals and tracks applications using MongoDB MCP.
+
+# Tools the agent can call (example HTTP tool + MCP tool integration)
+tools:
+  - id: http
+    type: http
+    config:
+      allowedHosts:
+        - "*"
+  - id: mcp-mongo
+    type: mcp
+    config:
+      provider: mongodb
+      uri: ${MONGO_URI}
+      database: ${MONGO_DB}
+
+# Example plan templates
+plans:
+  - id: apply-flow
+    steps:
+      - name: analyze
+        tool: http
+        input: |
+          POST /analyze_full
+          {"resume": "${resume}", "job_description": "${job_description}"}
+      - name: save
+        tool: mcp-mongo
+        input: |
+          collection: analyses
+          document: ${response.analyze}
+      - name: referral
+        tool: http
+        input: |
+          POST /generate_referral
+          {"company": "${company}", "role": "${role}", "resume": "${resume}"}
+
+# Deployment: specify model (Gemini) settings
+model:
+  provider: google
+  project: ${GCP_PROJECT}
+  location: ${GCP_LOCATION}
+  model: ${GEMINI_MODEL}
+
+# Notes: This file is a template for Agent Builder and must be adapted to the
+# Agent Builder UI or CLI format required by Google Cloud.
